@@ -1,0 +1,56 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Mis viajes publicados</h2>
+    <a href="{% url 'publicar_viaje' %}" class="btn btn-ucsc">Publicar nuevo viaje</a>
+</div>
+
+{% if viajes %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Origen - Destino</th>
+                <th>Fecha y hora</th>
+                <th>Asientos</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for viaje in viajes %}
+            <tr>
+                <td>
+                    <strong>{{ viaje.origen }}</strong> → 
+                    <strong>{{ viaje.destino }}</strong>
+                </td>
+                <td>{{ viaje.fecha_hora_salida|date:"d/m/Y H:i" }}</td>
+                <td>{{ viaje.asientos_disponibles }}</td>
+                <td>${{ viaje.precio_por_pasajero }}</td>
+                <td>
+                    {% if viaje.activo %}
+                        <span class="badge bg-success">Activo</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactivo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">Cancelar</a>
+                        <a href="#" class="btn btn-sm btn-outline-info">Ver reservas</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No has publicado ningún viaje todavía.
+</div>
+{% endif %}
+{% endblock %}

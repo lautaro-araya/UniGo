@@ -1,0 +1,75 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-ucsc text-white">
+                <h2 class="text-center">Publicar nuevo viaje</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <h3 for="id_vehiculo">Vehículo</h3>
+                                {{ form.vehiculo }}
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <h3 for="id_asientos_disponibles">Asientos disponibles</h3>
+                                {{ form.asientos_disponibles }}
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <h3 for="id_origen">Origen</h3>
+                                {{ form.origen }}
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <h3 for="id_destino">Destino</h3>
+                                {{ form.destino }}
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <h3 for="id_fecha_hora_salida" class="form-label">Fecha y hora de salida</h3>
+                                {{ form.fecha_hora_salida }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <h3 for="id_precio_por_pasajero">Precio por pasajero ($)</h3>
+                                {{ form.precio_por_pasajero }}
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'inicio' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-ucsc">Publicar viaje</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

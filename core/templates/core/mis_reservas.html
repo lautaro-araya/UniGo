@@ -1,0 +1,229 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-journal-check me-2"></i>Mis Reservas</h2>
+        <div>
+            <a href="{% url 'inicio' %}" class="btn btn-outline-ucsc">
+                <i class="bi bi-search me-1"></i>Buscar más viajes
+            </a>
+        </div>
+    </div>
+
+    {% if reservas %}
+    <div class="row">
+        {% for reserva in reservas %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center {% if reserva.estado == 'confirmada' %}bg-success text-white{% elif reserva.estado == 'cancelada' %}bg-danger text-white{% elif reserva.estado == 'completada' %}bg-secondary text-white{% else %}bg-warning text-dark{% endif %}">
+                    <div>
+                        <strong>Reserva #{{ reserva.id }}</strong>
+                    </div>
+                    <div>
+                        <span class="badge bg-light text-dark">
+                            {{ reserva.viaje.fecha_hora_salida|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-1 text-center">
+                            <i class="bi bi-geo-alt-fill h5 text-ucsc"></i>
+                            <div class="vr h-100 mx-auto"></div>
+                            <i class="bi bi-geo-alt h5 text-ucsc"></i>
+                        </div>
+                        <div class="col-11">
+                            <p class="mb-1"><strong>Salida:</strong> {{ reserva.viaje.origen }}</p>
+                            <p class="mb-1"><strong>Llegada:</strong> {{ reserva.viaje.destino }}</p>
+                            <p class="mb-0"><strong>Hora:</strong> {{ reserva.viaje.fecha_hora_salida|date:"H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Conductor:</strong> {{ reserva.viaje.conductor.get_full_name }}</p>
+                            <p><strong>Vehículo:</strong> {{ reserva.viaje.vehiculo.marca }} {{ reserva.viaje.vehiculo.modelo }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Asientos:</strong> {{ reserva.asientos_reservados }}</p>
+                            <p><strong>Precio total:</strong> ${{ reserva.viaje.precio_por_pasajero|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if reserva.estado == 'pendiente' %}
+                                <span class="badge bg-warning text-dark">Pendiente de confirmación</span>
+                            {% elif reserva.estado == 'confirmada' %}
+                                <span class="badge bg-success">Confirmada</span>
+                            {% elif reserva.estado == 'cancelada' %}
+                                <span class="badge bg-danger">Cancelada</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Completada</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="btn-group">
+                            {% if reserva.estado == 'pendiente' or reserva.estado == 'confirmada' %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelarModal{{ reserva.id }}">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                                </button>
+                            {% endif %}
+                            
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detallesModal{{ reserva.id }}">
+                                <i class="bi bi-info-circle me-1"></i>Detalles
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Cancelar Reserva -->
+        <div class="modal fade" id="cancelarModal{{ reserva.id }}" tabindex="-1" aria-labelledby="cancelarModalLabel{{ reserva.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="cancelarModalLabel{{ reserva.id }}">Cancelar Reserva</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro que deseas cancelar esta reserva?</p>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {% if reserva.estado == 'confirmada' %}
+                                Esta reserva ya fue confirmada por el conductor. La cancelación podría afectar tu reputación.
+                            {% else %}
+                                La cancelación de reservas frecuentes podría afectar tu reputación en la plataforma.
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                        <form method="post" action="{% url 'cancelar_reserva' reserva.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Confirmar Cancelación</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalles Reserva -->
+        <div class="modal fade" id="detallesModal{{ reserva.id }}" tabindex="-1" aria-labelledby="detallesModalLabel{{ reserva.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-ucsc text-white">
+                        <h5 class="modal-title" id="detallesModalLabel{{ reserva.id }}">Detalles de Reserva #{{ reserva.id }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-ucsc">Información del Viaje</h6>
+                                <p><strong>Ruta:</strong> {{ reserva.viaje.origen }} → {{ reserva.viaje.destino }}</p>
+                                <p><strong>Fecha y Hora:</strong> {{ reserva.viaje.fecha_hora_salida|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Vehículo:</strong> {{ reserva.viaje.vehiculo.marca }} {{ reserva.viaje.vehiculo.modelo }} ({{ reserva.viaje.vehiculo.patente }})</p>
+                                <p><strong>Asientos disponibles:</strong> {{ reserva.viaje.asientos_disponibles }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-ucsc">Información del Conductor</h6>
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="me-3">
+                                        <img src="{{ reserva.viaje.conductor.foto_perfil.url|default:'/static/img/default-profile.png' }}" 
+                                             class="rounded-circle" width="60" height="60" alt="Foto conductor">
+                                    </div>
+                                    <div>
+                                        <p class="mb-0"><strong>{{ reserva.viaje.conductor.get_full_name }}</strong></p>
+                                        <p class="mb-0">Calificación: 
+                                            <span class="text-warning">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= reserva.viaje.conductor.calificacion %}
+                                                        <i class="bi bi-star-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                        </p>
+                                        <p class="mb-0"><i class="bi bi-telephone me-1"></i>{{ reserva.viaje.conductor.telefono }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="text-ucsc">Detalles de tu Reserva</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Estado:</strong> 
+                                    {% if reserva.estado == 'pendiente' %}
+                                        <span class="badge bg-warning text-dark">Pendiente de confirmación</span>
+                                    {% elif reserva.estado == 'confirmada' %}
+                                        <span class="badge bg-success">Confirmada</span>
+                                    {% elif reserva.estado == 'cancelada' %}
+                                        <span class="badge bg-danger">Cancelada</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Completada</span>
+                                    {% endif %}
+                                </p>
+                                <p><strong>Asientos reservados:</strong> {{ reserva.asientos_reservados }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Precio por asiento:</strong> ${{ reserva.viaje.precio_por_pasajero|floatformat:2 }}</p>
+                                <p><strong>Total a pagar:</strong> ${{ reserva.get_total|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if reserva.estado == 'completada' and not reserva.calificacion %}
+                        <hr>
+                        <div class="mt-3">
+                            <h6 class="text-ucsc">Califica este viaje</h6>
+                            <form method="post" action="{% url 'calificar_viaje' reserva.id %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Puntuación:</label>
+                                    <div class="rating">
+                                        {% for i in "54321" %}
+                                            <input type="radio" id="star{{ i }}-{{ reserva.id }}" name="puntuacion" value="{{ i }}" required>
+                                            <label for="star{{ i }}-{{ reserva.id }}"><i class="bi bi-star-fill"></i></label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="comentario-{{ reserva.id }}" class="form-label">Comentario (opcional):</label>
+                                    <textarea class="form-control" id="comentario-{{ reserva.id }}" name="comentario" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-ucsc">Enviar Calificación</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+            <div>
+                <h5 class="alert-heading">No tienes reservas activas</h5>
+                <p class="mb-0">Busca viajes disponibles para comenzar a compartir movilización con otros estudiantes.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

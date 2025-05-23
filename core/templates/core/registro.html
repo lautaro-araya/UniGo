@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniRide - Comparte viajes universitarios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+</head>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-ucsc text-white">
+                    <h2 class="text-center">Registro de Usuario</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <h4 class="mb-3">Información Personal</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.username.id_for_label }}">Nombre de usuario</h3>
+                                    {{ form.username }}
+                                    {{ form.username.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.email.id_for_label }}">Correo electrónico</h3>
+                                    {{ form.email }}                                    
+                                    {{ form.email.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.first_name.id_for_label }}">Nombres</h3>
+                                    {{ form.first_name }}                            
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.last_name.id_for_label }}">Apellidos</h3>
+                                    {{ form.last_name }}                                
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.telefono.id_for_label }}">Teléfono</h3>
+                                    {{ form.telefono }}
+                                    
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.universidad.id_for_label }}">Universidad</h3>
+                                    {{ form.universidad }}
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 class="mb-3 mt-4">Tipo de Usuario</h4>
+                        <div class="mb-4">
+                            {{ form.tipo_usuario }}
+                            {{ form.tipo_usuario.errors }}
+                        </div>
+
+                        <!-- Sección de Vehículo (solo visible para conductores) -->
+                        <div id="vehiculo-section" style="display: none;">
+                            <h4 class="mb-3">Información del Vehículo</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <h3 for="{{ form.marca_vehiculo.id_for_label }}">Marca</h3>
+                                        {{ form.marca_vehiculo }}
+                                        
+                                        {{ form.marca_vehiculo.errors }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <h3 for="{{ form.modelo_vehiculo.id_for_label }}">Modelo</h3>
+                                        {{ form.modelo_vehiculo }}
+                                        
+                                        {{ form.modelo_vehiculo.errors }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <h3 for="{{ form.patente.id_for_label }}">Patente</h3>
+                                        {{ form.patente }}
+                                        
+                                        {{ form.patente.errors }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <h3 for="{{ form.año_vehiculo.id_for_label }}">Año</h3>
+                                        {{ form.año_vehiculo }}
+                                        
+                                        {{ form.año_vehiculo.errors }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <h3 for="{{ form.color_vehiculo.id_for_label }}">Color</h3>
+                                        {{ form.color_vehiculo }}
+                                        
+                                        {{ form.color_vehiculo.errors }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <h3 for="{{ form.asientos_vehiculo.id_for_label }}">N° de asientos</h3>
+                                        {{ form.asientos_vehiculo }}
+                                        
+                                        {{ form.asientos_vehiculo.errors }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 class="mb-3 mt-4">Seguridad</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.password1.id_for_label }}">Contraseña</h3>
+                                    {{ form.password1 }}
+                                    
+                                    {{ form.password1.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.password2.id_for_label }}">Confirmar Contraseña</h3>
+                                    {{ form.password2 }}
+                                    
+                                    {{ form.password2.errors }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-ucsc btn-lg">Registrarse</button>
+                        </div>
+                    </form>
+
+                    <div class="mt-3 text-center">
+                        <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mostrar/ocultar sección de vehículo según tipo de usuario
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoUsuarioRadios = document.querySelectorAll('input[name="tipo_usuario"]');
+        const vehiculoSection = document.getElementById('vehiculo-section');
+        
+        function toggleVehiculoSection() {
+            const selectedValue = document.querySelector('input[name="tipo_usuario"]:checked').value;
+            vehiculoSection.style.display = selectedValue === 'conductor' ? 'block' : 'none';
+            
+            // Hacer campos requeridos dinámicamente
+            const vehiculoFields = vehiculoSection.querySelectorAll('input, select');
+            vehiculoFields.forEach(field => {
+                field.required = selectedValue === 'conductor';
+            });
+        }
+        
+        tipoUsuarioRadios.forEach(radio => {
+            radio.addEventListener('change', toggleVehiculoSection);
+        });
+        
+        // Ejecutar al cargar la página
+        toggleVehiculoSection();
+    });
+</script>

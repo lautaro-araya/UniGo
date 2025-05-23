@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Viajes disponibles</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <form method="get" class="d-flex">
+            <input type="text" name="q" class="form-control me-2" placeholder="Buscar destino...">
+            <button type="submit" class="btn btn-ucsc">Buscar</button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for viaje in viajes %}
+    <div class="col-md-6 mb-4">
+        <div class="card card-viaje h-100">
+            <div class="card-header bg-ucsc text-white">
+                <div class="d-flex justify-content-between">
+                    <h5 class="card-title mb-0">{{ viaje.conductor.get_full_name }}</h5>
+                    <span class="badge bg-light text-dark">{{ viaje.vehiculo.marca }} {{ viaje.vehiculo.modelo }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-2 text-center">
+                        <i class="bi bi-geo-alt-fill h4 text-ucsc"></i>
+                        <div class="vr h-100 mx-auto"></div>
+                        <i class="bi bi-geo-alt h4 text-ucsc"></i>
+                    </div>
+                    <div class="col-10">
+                        <p class="mb-1"><strong>Salida:</strong> {{ viaje.origen }}</p>
+                        <p class="mb-3"><strong>Llegada:</strong> {{ viaje.destino }}</p>
+                        <p><strong>Fecha y hora:</strong> {{ viaje.fecha_hora_salida|date:"d/m/Y H:i" }}</p>
+                        <p><strong>Asientos disponibles:</strong> {{ viaje.asientos_disponibles }}</p>
+                        <p><strong>Precio:</strong> ${{ viaje.precio_por_pasajero }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'reservar_viaje' viaje.id %}" class="btn btn-ucsc">Reservar</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No hay viajes disponibles en este momento.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

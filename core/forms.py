@@ -1,0 +1,86 @@
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from .models import Usuario, Vehiculo, Viaje
+
+
+class RegistroForm(UserCreationForm):
+    tipo_usuario = forms.ChoiceField(
+        choices=Usuario.TIPO_USUARIO_CHOICES,
+        widget=forms.RadioSelect,
+        label="Tipo de usuario"
+    )
+    
+    # Campos solo para conductores
+    marca_vehiculo = forms.CharField(
+        max_length=50,
+        required=False,
+        label="Marca del vehículo"
+    )
+    modelo_vehiculo = forms.CharField(
+        max_length=50,
+        required=False,
+        label="Modelo del vehículo"
+    )
+    patente = forms.CharField(
+        max_length=10,
+        required=False,
+        label="Patente"
+    )
+    año_vehiculo = forms.IntegerField(
+        required=False,
+        label="Año del vehículo",
+        min_value=1990,
+        max_value=2025
+    )
+    color_vehiculo = forms.CharField(
+        label="Color del vehículo",
+        max_length=30,
+        required=False
+    )
+    
+    asientos_vehiculo = forms.IntegerField(
+        required=False,
+        label="Numero de asientos vehículo",
+        min_value=4,
+        max_value=10, 
+        initial=4
+    )
+    
+    class Meta:
+        model = Usuario
+        fields = ['username', 'first_name', 'last_name', 'email', 'tipo_usuario', 
+                 'telefono', 'universidad', 'password1', 'password2',
+                 'marca_vehiculo', 'modelo_vehiculo', 'patente', 'año_vehiculo', 'color_vehiculo', 'asientos_vehiculo']
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo_usuario = cleaned_data.get('tipo_usuario')
+        if tipo_usuario == 'conductor':
+            if not cleaned_data.get('marca_vehiculo'):
+                self.add_error('marca_vehiculo', 'Este campo es obligatorio para conductores')
+            if not cleaned_data.get('modelo_vehiculo'):
+                self.add_error('modelo_vehiculo', 'Este campo es obligatorio para conductores')
+            if not cleaned_data.get('patente'):
+                self.add_error('patente', 'Este campo es obligatorio para conductores')
+            if not cleaned_data.get('año_vehiculo'):
+                self.add_error('año_vehiculo', 'Este campo es obligatorio para conductores')
+        return cleaned_data
+    
+    def clean_patente(self):
+        patente = self.cleaned_data.get('patente')
+        if patente and Vehiculo.objects.filter(patente=patente).exists():
+            raise forms.ValidationError("Esta patente ya está registrada")
+        return patente
+
+class VehiculoForm(forms.ModelForm):
+    class Meta:
+        model = Vehiculo
+        fields = ['marca', 'modelo', 'año', 'patente', 'color', 'asientos_disponibles']
+
+class ViajeForm(forms.ModelForm):
+    class Meta:
+        model = Viaje
+        fields = ['vehiculo', 'origen', 'destino', 'fecha_hora_salida', 'asientos_disponibles', 'precio_por_pasajero', 'descripcion']
+        widgets = {
+            'fecha_hora_salida': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }

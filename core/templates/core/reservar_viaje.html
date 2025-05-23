@@ -1,0 +1,54 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-ucsc text-white">
+                <h3 class="text-center">Reservar viaje</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h4>Detalles del viaje</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Conductor:</strong> {{ viaje.conductor.get_full_name }}</p>
+                            <p><strong>Vehículo:</strong> {{ viaje.vehiculo.marca }} {{ viaje.vehiculo.modelo }}</p>
+                            <p><strong>Patente:</strong> {{ viaje.vehiculo.patente }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Origen:</strong> {{ viaje.origen }}</p>
+                            <p><strong>Destino:</strong> {{ viaje.destino }}</p>
+                            <p><strong>Fecha y hora:</strong> {{ viaje.fecha_hora_salida|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <p class="mb-1"><strong>Asientos disponibles:</strong> {{ viaje.asientos_disponibles }}</p>
+                        <p class="mb-0"><strong>Precio por pasajero:</strong> ${{ viaje.precio_por_pasajero }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="asientos" class="form-label">Número de asientos a reservar</label>
+                        <select name="asientos" id="asientos" class="form-select" required>
+                            {% for i in "123456789"|make_list %}
+                                {% if forloop.counter <= viaje.asientos_disponibles %}
+                                    <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'inicio' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-ucsc">Confirmar reserva</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
