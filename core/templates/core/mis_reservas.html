@@ -29,14 +29,9 @@
                 
                 <div class="card-body">
                     <div class="row mb-3">
-                        <div class="col-1 text-center">
-                            <i class="bi bi-geo-alt-fill h5 text-ucsc"></i>
-                            <div class="vr h-100 mx-auto"></div>
-                            <i class="bi bi-geo-alt h5 text-ucsc"></i>
-                        </div>
                         <div class="col-11">
-                            <p class="mb-1"><strong>Salida:</strong> {{ reserva.viaje.origen }}</p>
-                            <p class="mb-1"><strong>Llegada:</strong> {{ reserva.viaje.destino }}</p>
+                            <p class="mb-1"><strong><i class="bi bi-geo-alt-fill h4 text-ucsc"></i> Salida:</strong> {{ reserva.viaje.origen }}</p>
+                            <p class="mb-3"><strong><i class="bi bi-geo-alt h4 text-ucsc"></i> Llegada:</strong> {{ reserva.viaje.destino }}</p>
                             <p class="mb-0"><strong>Hora:</strong> {{ reserva.viaje.fecha_hora_salida|date:"H:i" }}</p>
                         </div>
                     </div>
