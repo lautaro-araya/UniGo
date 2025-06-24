@@ -1,0 +1,52 @@
+<div class="modal-header bg-ucsc text-white">
+    <h5 class="modal-title">Reservas - Viaje #{{ viaje.id }}</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Pasajero</th>
+                    <th>Asientos</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reserva in viaje.reservas.all %}
+                <tr>
+                    <td>{{ reserva.pasajero.get_full_name }}</td>
+                    <td>{{ reserva.asientos_reservados }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if reserva.estado == 'confirmada' %}bg-success
+                            {% elif reserva.estado == 'pendiente' %}bg-warning
+                            {% else %}bg-secondary{% endif %}">
+                            {{ reserva.get_estado_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if reserva.estado == 'pendiente' %}
+                        <form method="post" action="{% url 'confirmar_reserva' reserva.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success"
+                                    onclick="return confirm('¿Confirmar esta reserva?')">
+                                Confirmar
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No hay reservas para este viaje</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-ucsc" data-bs-dismiss="modal">Cerrar</button>
+</div>

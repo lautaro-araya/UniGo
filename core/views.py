@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
-from django.db.models import Avg
-from .forms import RegistroForm, VehiculoForm, ViajeForm
-from .models import Usuario, Vehiculo, Viaje, Reserva, Calificacion
-from django.contrib import messages
+from django.db.models import Avg, Q, Count
+from .forms import RegistroForm, VehiculoForm, ViajeForm, PerfilUpdateForm, CustomPasswordChangeForm, VehiculoForm2
+from .models import Usuario, Vehiculo, Viaje, Reserva, Calificacion, ChatViaje, MensajeChat
 from django.views.decorators.cache import never_cache
+from django.contrib.auth import update_session_auth_hash
 
 @never_cache
 def login_view(request):
@@ -102,14 +103,23 @@ def reservar_viaje(request, viaje_id):
             return redirect('mis_reservas')
     return render(request, 'core/reservar_viaje.html', {'viaje': viaje})
 
-@login_required
-def mis_viajes(request):
-    viajes = Viaje.objects.filter(conductor=request.user).order_by('-fecha_hora_salida')
-    return render(request, 'core/mis_viajes.html', {'viajes': viajes})
 
 @login_required
 def mis_reservas(request):
-    reservas = Reserva.objects.filter(pasajero=request.user).order_by('-creado_en')
+    reservas = Reserva.objects.filter(
+        pasajero=request.user
+    ).select_related('viaje', 'viaje__conductor').prefetch_related('viaje__chats__mensajes')
+    
+    for reserva in reservas:
+        # Obtener el chat asociado si existe
+        reserva.chat = reserva.viaje.chats.filter(pasajero=request.user).first()
+        
+        if reserva.chat:
+            reserva.tiene_mensajes_no_leidos = reserva.chat.mensajes.filter(
+                leido=False, 
+                autor=reserva.viaje.conductor
+            ).exists()
+    
     return render(request, 'core/mis_reservas.html', {'reservas': reservas})
 
 @login_required
@@ -159,3 +169,244 @@ def calificar_viaje(request, reserva_id):
         return redirect('mis_reservas')
     
     return redirect('mis_reservas')
+
+@login_required
+def perfil(request):
+    user = request.user
+    vehiculo = None
+    
+    if user.tipo_usuario == 'conductor':
+        try:
+            vehiculo = user.vehiculos.first()  # Asumiendo relación one-to-one o first() si es one-to-many
+        except:
+            vehiculo = None
+    
+    # Formulario de actualización de perfil
+    perfil_form = PerfilUpdateForm(instance=user)
+    password_form = CustomPasswordChangeForm(user=user)
+    vehiculo_form = VehiculoForm2(instance=vehiculo) if vehiculo else VehiculoForm2()
+    
+    context = {
+        'perfil_form': perfil_form,
+        'password_form': password_form,
+        'vehiculo_form': vehiculo_form,
+        'vehiculo': vehiculo,
+    }
+    
+    return render(request, 'core/perfil.html', context)
+
+@login_required
+def actualizar_perfil(request):
+    if request.method == 'POST':
+        form = PerfilUpdateForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tu perfil ha sido actualizado correctamente.')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    return redirect('perfil')
+
+@login_required
+def cambiar_password(request):
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Importante para no desloguear al usuario
+            messages.success(request, 'Tu contraseña ha sido cambiada correctamente.')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    return redirect('perfil')
+
+@login_required
+def actualizar_vehiculo(request):
+    if request.user.tipo_usuario != 'conductor':
+        return redirect('perfil')
+    
+    vehiculo = request.user.vehiculos.first() if hasattr(request.user, 'vehiculos') else None
+    
+    if request.method == 'POST':
+        form = VehiculoForm2(request.POST, request.FILES, instance=vehiculo)
+        if form.is_valid():
+            vehiculo = form.save(commit=False)
+            vehiculo.conductor = request.user
+            vehiculo.save()
+            messages.success(request, 'La información del vehículo ha sido actualizada.')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    return redirect('perfil')
+
+
+##jajajjajaja
+@login_required
+def mis_viajes(request):
+    viajes = Viaje.objects.filter(conductor=request.user).order_by('-fecha_hora_salida')
+    return render(request, 'core/mis_viajes.html', {'viajes': viajes})
+
+@login_required
+def editar_viaje(request, viaje_id):
+    viaje = get_object_or_404(Viaje, id=viaje_id, conductor=request.user)
+    
+    if request.method == 'POST':
+        form = ViajeForm(request.POST, instance=viaje)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Viaje actualizado correctamente')
+            return redirect('mis_viajes')
+        else:
+            messages.error(request, 'Error al actualizar el viaje')
+    else:
+        form = ViajeForm(instance=viaje)
+    
+    # Para el modal
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'core/includes/modal_editar_viaje.html', {
+            'form': form,
+            'viaje': viaje
+        })
+    
+    return render(request, 'core/mis_viajes.html', {
+        'form': form,
+        'viajes': Viaje.objects.filter(conductor=request.user)
+    })
+
+@login_required
+def cancelar_viaje(request, viaje_id):
+    viaje = get_object_or_404(Viaje, id=viaje_id, conductor=request.user)
+    
+    if request.method == 'POST':
+        viaje.activo = False
+        viaje.save()
+        
+        # Cancelar todas las reservas asociadas
+        viaje.reservas.update(estado='cancelada')
+        
+        messages.success(request, 'Viaje cancelado correctamente')
+    else:
+        messages.error(request, 'Método no permitido')
+    
+    return redirect('mis_viajes')
+
+@login_required
+def ver_reservas_viaje(request, viaje_id):
+    viaje = get_object_or_404(Viaje, id=viaje_id, conductor=request.user)
+    reservas = viaje.reservas.all().order_by('creado_en')
+    
+    # Para el modal
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'core/includes/modal_reservas_viaje.html', {
+            'viaje': viaje,
+            'reservas': reservas
+        })
+    
+    return redirect('mis_viajes')
+
+@login_required
+def confirmar_reserva(request, reserva_id):
+    reserva = get_object_or_404(Reserva, id=reserva_id, viaje__conductor=request.user)
+    
+    if request.method == 'POST':
+        if reserva.estado == 'pendiente':
+            reserva.estado = 'confirmada'
+            reserva.save()
+            messages.success(request, 'Reserva confirmada correctamente')
+        else:
+            messages.warning(request, 'La reserva ya estaba confirmada o cancelada')
+    
+    return redirect('mis_viajes')
+
+
+
+@login_required
+def terminar_viaje(request, viaje_id):
+    viaje = get_object_or_404(Viaje, id=viaje_id, conductor=request.user)
+    
+    if request.method == 'POST':
+        if viaje.activo:
+            viaje.activo = False
+            viaje.save()
+            
+            # Marcar reservas confirmadas como completadas
+            viaje.reservas.filter(estado='confirmada').update(estado='completada')
+            
+            messages.success(request, 'Viaje marcado como completado')
+        else:
+            messages.warning(request, 'El viaje ya estaba completado o cancelado')
+    
+    return redirect('mis_viajes')
+
+@login_required
+def listar_chats(request):
+    # Obtener chats activos donde el usuario es conductor o pasajero
+    chats = ChatViaje.objects.filter(
+        Q(conductor=request.user) | Q(pasajero=request.user),
+        activo=True
+    ).select_related('pasajero', 'conductor', 'viaje')
+    
+    # Preprocesar datos para cada chat
+    for chat in chats:
+        # Obtener reserva asociada
+        chat.reserva = Reserva.objects.filter(
+            viaje=chat.viaje,
+            pasajero=chat.pasajero
+        ).first()
+        
+        # Verificar mensajes no leídos
+        chat.tiene_no_leidos = chat.tiene_mensajes_no_leidos(request.user)
+    
+    # Filtrar chats que tienen reserva válida
+    chats_validos = [chat for chat in chats if chat.reserva]
+    
+    return render(request, 'core/lista_chats.html', {
+        'chats': chats_validos,
+        'es_conductor': request.user.tipo_usuario == 'conductor'
+    })
+
+@login_required
+def ver_chat(request, reserva_id):    
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    
+    # Verificar que el usuario es el pasajero o conductor
+    if request.user not in [reserva.pasajero, reserva.viaje.conductor]:
+        messages.error(request, "No tienes permiso para acceder a este chat")
+        return redirect('mis_reservas')
+    
+    # Verificar que la reserva está confirmada
+    if reserva.estado != 'confirmada':
+        messages.error(request, "El chat solo está disponible para reservas confirmadas")
+        return redirect('mis_reservas')
+    
+    # Obtener o crear el chat
+    chat, created = ChatViaje.objects.get_or_create(
+        viaje=reserva.viaje,
+        pasajero=reserva.pasajero,
+        defaults={'conductor': reserva.viaje.conductor}
+    )
+    
+    # Marcar mensajes como leídos
+    if request.user == reserva.pasajero:
+        chat.mensajes.filter(autor=reserva.viaje.conductor, leido=False).update(leido=True)
+    else:
+        chat.mensajes.filter(autor=reserva.pasajero, leido=False).update(leido=True)
+    
+    # Enviar mensaje si se envió el formulario
+    if request.method == 'POST':
+        contenido = request.POST.get('contenido', '').strip()
+        if contenido:
+            MensajeChat.objects.create(
+                chat=chat,
+                autor=request.user,
+                contenido=contenido
+            )
+            return redirect('ver_chat', reserva_id=reserva.id)
+    
+    # Obtener todos los mensajes del chat
+    mensajes = chat.mensajes.all()
+    
+    return render(request, 'core/chat.html', {
+        'chat': chat,
+        'mensajes': mensajes,
+        'reserva': reserva,
+        'otro_usuario': reserva.viaje.conductor if request.user == reserva.pasajero else reserva.pasajero
+    })
+

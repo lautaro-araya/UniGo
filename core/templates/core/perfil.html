@@ -1,0 +1,232 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-4">
+            <!-- Tarjeta de perfil -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-ucsc text-white">
+                    <h5 class="mb-0">Mi Perfil</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h4>{{ user.get_full_name }}</h4>
+                    <p class="text-muted mb-1">{{ user.get_tipo_usuario_display }}</p>
+                    {% if user.universidad %}
+                    <p class="text-muted">{{ user.universidad }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-center mb-2">
+                        <span class="text-warning">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= user.calificacion %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Menú de navegación -->
+            <div class="card shadow-sm">
+                <div class="list-group list-group-flush">
+                    <a href="#datos-personales" class="list-group-item list-group-item-action active" 
+                       data-bs-toggle="tab">Datos Personales</a>
+                    <a href="#cambiar-password" class="list-group-item list-group-item-action" 
+                       data-bs-toggle="tab">Cambiar Contraseña</a>
+                    {% if user.tipo_usuario == 'conductor' %}
+                    <a href="#vehiculo" class="list-group-item list-group-item-action" 
+                       data-bs-toggle="tab">Mi Vehículo</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="tab-content">
+                <!-- Sección Datos Personales -->
+                <div class="tab-pane fade show active" id="datos-personales">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-ucsc text-white">
+                            <h5 class="mb-0">Información Personal</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'actualizar_perfil' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ perfil_form.first_name }}
+                                            <label for="{{ perfil_form.first_name.id_for_label }}">Nombres</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ perfil_form.last_name }}
+                                            <label for="{{ perfil_form.last_name.id_for_label }}">Apellidos</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ perfil_form.email }}
+                                            <label for="{{ perfil_form.email.id_for_label }}">Correo Electrónico</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ perfil_form.telefono }}
+                                            <label for="{{ perfil_form.telefono.id_for_label }}">Teléfono</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-floating mb-3">
+                                            {{ perfil_form.universidad }}
+                                            <label for="{{ perfil_form.universidad.id_for_label }}">Universidad</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-ucsc">Guardar Cambios</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección Cambiar Contraseña -->
+                <div class="tab-pane fade" id="cambiar-password">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-ucsc text-white">
+                            <h5 class="mb-0">Cambiar Contraseña</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'cambiar_password' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="{{ password_form.old_password.id_for_label }}" class="form-label">Contraseña Actual</label>
+                                    {{ password_form.old_password }}
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ password_form.new_password1.id_for_label }}" class="form-label">Nueva Contraseña</label>
+                                    {{ password_form.new_password1 }}
+                                    <div class="form-text">{{ password_form.new_password1.help_text }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="{{ password_form.new_password2.id_for_label }}" class="form-label">Confirmar Nueva Contraseña</label>
+                                    {{ password_form.new_password2 }}
+                                </div>
+                                <button type="submit" class="btn btn-ucsc">Cambiar Contraseña</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección Vehículo (solo para conductores) -->
+                {% if user.tipo_usuario == 'conductor' %}
+                <div class="tab-pane fade" id="vehiculo">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-ucsc text-white">
+                            <h5 class="mb-0">Información del Vehículo</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if vehiculo %}
+                            <div class="text-center mb-4">
+                                <h4>{{ vehiculo.marca }} {{ vehiculo.modelo }}</h4>
+                                <p class="text-muted">{{ vehiculo.patente }} • {{ vehiculo.año }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <form method="post" action="{% url 'actualizar_vehiculo' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ vehiculo_form.marca }}
+                                            <label for="{{ vehiculo_form2.marca.id_for_label }}">Marca</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ vehiculo_form.modelo }}
+                                            <label for="{{ vehiculo_form2.modelo.id_for_label }}">Modelo</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ vehiculo_form.patente }}
+                                            <label for="{{ vehiculo_form.patente.id_for_label }}">Patente</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ vehiculo_form.año }}
+                                            <label for="{{ vehiculo_form.año.id_for_label }}">Año</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ vehiculo_form.color }}
+                                            <label for="{{ vehiculo_form.color.id_for_label }}">Color</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            {{ vehiculo_form.asientos_disponibles }}
+                                            <label for="{{ vehiculo_form.asientos_disponibles.id_for_label }}">Asientos Disponibles</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-ucsc">
+                                    {% if vehiculo %}Actualizar{% else %}Registrar{% endif %} Vehículo
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Activar los tooltips de Bootstrap
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar mensajes de error en los formularios
+    {% if perfil_form.errors %}
+        document.querySelector('[data-bs-target="#datos-personales"]').click();
+    {% elif password_form.errors %}
+        document.querySelector('[data-bs-target="#cambiar-password"]').click();
+    {% elif vehiculo_form.errors %}
+        document.querySelector('[data-bs-target="#vehiculo"]').click();
+    {% endif %}
+    
+    // Validación de campos
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            let valid = true;
+            const inputs = this.querySelectorAll('input[required], select[required]');
+            
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    valid = false;
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!valid) {
+                e.preventDefault();
+                alert('Por favor complete todos los campos requeridos.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

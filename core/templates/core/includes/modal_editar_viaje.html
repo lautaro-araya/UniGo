@@ -1,0 +1,54 @@
+
+<div class="modal-header bg-ucsc text-white">
+    <h5 class="modal-title">Editar Viaje # {{ viaje.id }}</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<form method="post" action="{% url 'editar_viaje' viaje.id %}">
+    <div class="modal-body">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    {{ viaje.origen }}
+                    <label for="{{ viaje.origen.id_for_label }}">Origen</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <label for="{{ viaje.destino.id_for_label }}">Destino</label>
+                    {{ viaje.destino }}
+                    
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ viaje.fecha_hora_salida.id_for_label }}" class="form-label">Fecha y hora</label>
+                    {{ viaje.fecha_hora_salida }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <label for="{{ viaje.asientos_disponibles.id_for_label }}">Asientos</label>
+                    {{ viaje.asientos_disponibles }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating mb-3">
+                    <label for="{{ viaje.precio_por_pasajero.id_for_label }}">Precio ($)</label>
+                    {{ viaje.precio_por_pasajero }}
+                    
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="mb-3">
+                    <label for="{{ viaje.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                    {{ viaje.descripcion }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-ucsc">Guardar Cambios</button>
+    </div>
+</form>

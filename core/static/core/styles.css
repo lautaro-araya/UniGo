@@ -63,8 +63,14 @@ h3{
     color: #ffc107;
 }
 
-/* static/css/unigo.css */
+/* static/css/unigo.css 
+*{
+    outline: 1px solid red;
+}
+*/
 /* Estilos generales basados en la paleta UCSC (azul y blanco) */
+
+
 
 
 /* Estructura base */
@@ -72,9 +78,9 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--ucsc-text);
     background-color: var(--ucsc-light);
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
+    margin: 0 auto;
 }
 
 .container {
@@ -123,6 +129,11 @@ body {
 
 .card-body {
     padding: 1.5rem;
+}
+
+.card-login{
+    margin: 0 auto;
+    padding-top: 100px;
 }
 
 /* Botones */

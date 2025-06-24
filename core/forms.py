@@ -1,7 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Usuario, Vehiculo, Viaje
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class RegistroForm(UserCreationForm):
     tipo_usuario = forms.ChoiceField(
@@ -83,4 +86,43 @@ class ViajeForm(forms.ModelForm):
         fields = ['vehiculo', 'origen', 'destino', 'fecha_hora_salida', 'asientos_disponibles', 'precio_por_pasajero', 'descripcion']
         widgets = {
             'fecha_hora_salida': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+
+class PerfilUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'telefono', 'universidad']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'universidad': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label="Contraseña actual",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+    new_password1 = forms.CharField(
+        label="Nueva contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+    new_password2 = forms.CharField(
+        label="Confirmar nueva contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+
+class VehiculoForm2(forms.ModelForm):
+    class Meta:
+        model = Vehiculo
+        fields = ['marca', 'modelo', 'año', 'patente', 'color', 'asientos_disponibles']
+        widgets = {
+            'marca': forms.TextInput(attrs={'class': 'form-control'}),
+            'modelo': forms.TextInput(attrs={'class': 'form-control'}),
+            'año': forms.NumberInput(attrs={'class': 'form-control'}),
+            'patente': forms.TextInput(attrs={'class': 'form-control'}),
+            'color': forms.TextInput(attrs={'class': 'form-control'}),
+            'asientos_disponibles': forms.NumberInput(attrs={'class': 'form-control'}),
         }

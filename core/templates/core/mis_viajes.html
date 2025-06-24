@@ -1,56 +1,126 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Mis viajes publicados</h2>
-    <a href="{% url 'publicar_viaje' %}" class="btn btn-ucsc">Publicar nuevo viaje</a>
+<div class="container">
+    <h2 class="my-4">Mis Viajes Publicados</h2>
+    
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Origen - Destino</th>
+                    <th>Fecha y Hora</th>
+                    <th>Asientos</th>
+                    <th>Precio</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for viaje in viajes %}
+                <tr>
+                    <td>
+                        <strong>{{ viaje.origen }}</strong> → 
+                        <strong>{{ viaje.destino }}</strong>
+                    </td>
+                    <td>{{ viaje.fecha_hora_salida|date:"d/m/Y H:i" }}</td>
+                    <td>{{ viaje.asientos_disponibles }}</td>
+                    <td>${{ viaje.precio_por_pasajero }}</td>
+                    <td>
+                        {% if viaje.activo %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <!-- Botón Editar -->
+                            <button class="btn btn-outline-primary" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#editarViajeModal{{ viaje.id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            
+                            <!-- Botón Cancelar -->
+                            <form method="post" action="{% url 'cancelar_viaje' viaje.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger"
+                                        onclick="return confirm('¿Estás seguro de cancelar este viaje?')">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
+                            
+                            <!-- Botón Ver Reservas -->
+                            <button class="btn btn-outline-info" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#reservasViajeModal{{ viaje.id }}">
+                                <i class="bi bi-people"></i>
+                            </button>
+                            
+                            <!-- Botón Terminar Viaje -->
+                            {% if viaje.activo %}
+                            <form method="post" action="{% url 'terminar_viaje' viaje.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-success"
+                                        onclick="return confirm('¿Marcar este viaje como completado?')">
+                                    <i class="bi bi-flag"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Modal Editar Viaje (individual para cada viaje) -->
+                        <div class="modal fade" id="editarViajeModal{{ viaje.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    {% include 'core/includes/modal_editar_viaje.html' with viaje=viaje %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Reservas Viaje (individual para cada viaje) -->
+                        <div class="modal fade" id="reservasViajeModal{{ viaje.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    {% include 'core/includes/modal_reservas_viaje.html' with viaje=viaje %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No has publicado ningún viaje todavía</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-
-{% if viajes %}
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Origen - Destino</th>
-                <th>Fecha y hora</th>
-                <th>Asientos</th>
-                <th>Precio</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for viaje in viajes %}
-            <tr>
-                <td>
-                    <strong>{{ viaje.origen }}</strong> → 
-                    <strong>{{ viaje.destino }}</strong>
-                </td>
-                <td>{{ viaje.fecha_hora_salida|date:"d/m/Y H:i" }}</td>
-                <td>{{ viaje.asientos_disponibles }}</td>
-                <td>${{ viaje.precio_por_pasajero }}</td>
-                <td>
-                    {% if viaje.activo %}
-                        <span class="badge bg-success">Activo</span>
-                    {% else %}
-                        <span class="badge bg-secondary">Inactivo</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <div class="d-flex gap-2">
-                        <a href="#" class="btn btn-sm btn-outline-primary">Editar</a>
-                        <a href="#" class="btn btn-sm btn-outline-danger">Cancelar</a>
-                        <a href="#" class="btn btn-sm btn-outline-info">Ver reservas</a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% else %}
-<div class="alert alert-info">
-    No has publicado ningún viaje todavía.
-</div>
-{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar el cierre de modales después de guardar
+    const formsModal = document.querySelectorAll('.modal form');
+    formsModal.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(form.closest('.modal'));
+                if (modal) {
+                    modal.hide();
+                }
+            }, 1000); // Pequeño retraso para ver el mensaje
+        });
+    });
+    
+    // Mostrar mensajes de Django en los modales
+    {% if messages %}
+        {% for message in messages %}
+            alert("{{ message }}");
+        {% endfor %}
+    {% endif %}
+});
+</script>
 {% endblock %}

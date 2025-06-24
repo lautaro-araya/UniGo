@@ -1,0 +1,75 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header bg-ucsc text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Chat con {{ otro_usuario.get_full_name }}</h5>
+            <span class="badge bg-light text-dark">
+                Viaje #{{ reserva.viaje.id }} - {{ reserva.viaje.origen }} → {{ reserva.viaje.destino }}
+            </span>
+        </div>
+        
+        <div class="card-body chat-container" style="height: 60vh; overflow-y: auto;">
+            {% for mensaje in mensajes %}
+            <div class="mb-3 {% if mensaje.autor == request.user %}text-end{% endif %}">
+                <div class="d-flex {% if mensaje.autor == request.user %}justify-content-end{% endif %}">
+                    <div class="{% if mensaje.autor == request.user %}bg-primary text-white{% else %}bg-light{% endif %} 
+                                p-3 rounded-3" style="max-width: 70%;">
+                        <div class="fw-bold">{{ mensaje.autor.get_full_name }}</div>
+                        <div>{{ mensaje.contenido }}</div>
+                        <div class="text-muted small mt-1">
+                            {{ mensaje.creado_en|date:"d/m/Y H:i" }}
+                            {% if mensaje.autor == request.user and mensaje.leido %}
+                            <i class="bi bi-check2-all"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="card-footer">
+            <form method="post">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" name="contenido" class="form-control" 
+                           placeholder="Escribe un mensaje..." required>
+                    <button type="submit" class="btn btn-ucsc">
+                        <i class="bi bi-send"></i> Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+// Función para recargar los mensajes
+function actualizarChat() {
+    fetch(window.location.href)
+        .then(response => response.text())
+        .then(html => {
+            // Extraer solo la parte del chat del HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const nuevoChat = doc.querySelector('#chat-container').innerHTML;
+            
+            // Actualizar solo el contenedor del chat
+            document.querySelector('#chat-container').innerHTML = nuevoChat;
+            
+            // Hacer scroll al final del chat
+            const chatContainer = document.querySelector('#chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+}
+
+// Actualizar cada segundo
+setInterval(actualizarChat, 30000);
+
+// También actualizar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarChat();
+});
+</script>
+{% endblock %}

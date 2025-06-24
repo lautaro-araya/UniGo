@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Mis Chats Activos</h2>
+    
+    <div class="list-group">
+        {% for chat in chats %}
+        <a href="{% url 'ver_chat' chat.reserva.id %}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    {% if es_conductor %}
+                        {{ chat.pasajero.get_full_name }}
+                    {% else %}
+                        {{ chat.conductor.get_full_name }}
+                    {% endif %}
+                </h5>
+                <small>Viaje #{{ chat.viaje.id }}</small>
+            </div>
+            <p class="mb-1">
+                {{ chat.viaje.origen }} → {{ chat.viaje.destino }}
+            </p>
+            <small>
+                {% with ultimo_mensaje=chat.mensajes.last %}
+                    {% if ultimo_mensaje %}
+                        {{ ultimo_mensaje.autor.get_short_name }}: {{ ultimo_mensaje.contenido|truncatechars:30 }}
+                    {% else %}
+                        Sin mensajes aún
+                    {% endif %}
+                {% endwith %}
+            </small>
+            {% if chat.tiene_no_leidos %}
+                <span class="badge bg-danger float-end">Nuevo</span>
+            {% endif %}
+        </a>
+        {% empty %}
+        <div class="alert alert-info">
+            No tienes chats activos actualmente
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

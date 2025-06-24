@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Usuario(AbstractUser):
@@ -79,3 +81,31 @@ class Calificacion(models.Model):
     
     def __str__(self):
         return f"{self.puntuacion} estrellas de {self.calificador} a {self.calificado}"
+
+User = get_user_model()
+
+class ChatViaje(models.Model):
+    viaje = models.ForeignKey('Viaje', on_delete=models.CASCADE, related_name='chats')
+    pasajero = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats_como_pasajero')
+    conductor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats_como_conductor')
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('viaje', 'pasajero')
+
+    def tiene_mensajes_no_leidos(self, usuario):
+        """Verifica si hay mensajes no leídos para el usuario"""
+        if usuario.tipo_usuario == 'pasajero':
+            return self.mensajes.filter(leido=False, autor=self.conductor).exists()
+        return False
+
+class MensajeChat(models.Model):
+    chat = models.ForeignKey(ChatViaje, on_delete=models.CASCADE, related_name='mensajes')
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    contenido = models.TextField()
+    leido = models.BooleanField(default=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['creado_en']

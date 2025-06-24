@@ -74,6 +74,13 @@
                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#detallesModal{{ reserva.id }}">
                                 <i class="bi bi-info-circle me-1"></i>Detalles
                             </button>
+                            
+                            {# Botón de Chat - Solo para reservas confirmadas #}
+                            {% if reserva.estado == 'confirmada' %}
+                                <a href="{% url 'ver_chat' reserva.id %}" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-chat-text me-1"></i>Chat
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
