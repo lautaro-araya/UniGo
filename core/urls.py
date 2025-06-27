@@ -24,4 +24,5 @@ urlpatterns = [
     path('viaje/terminar/<int:viaje_id>/', views.terminar_viaje, name='terminar_viaje'),
     path('chats/', views.listar_chats, name='lista_chats'),
     path('chat/<int:reserva_id>/', views.ver_chat, name='ver_chat'),
+    path('aprobar-usuarios/', views.aprobar_usuarios, name='aprobar_usuarios'),
 ]

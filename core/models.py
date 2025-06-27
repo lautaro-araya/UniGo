@@ -11,12 +11,15 @@ class Usuario(AbstractUser):
     ]
     
     tipo_usuario = models.CharField(max_length=10, choices=TIPO_USUARIO_CHOICES, default='pasajero')
+    run = models.CharField(max_length=12)
     telefono = models.CharField(max_length=15, blank=True, null=True)
     universidad = models.CharField(max_length=100, blank=True, null=True)
     calificacion = models.FloatField(
         validators=[MinValueValidator(0.0), MaxValueValidator(5.0)],
         default=5.0
     )
+    aprobado = models.BooleanField(default=False, verbose_name="Cuenta aprobada")
+    fecha_registro = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return f"{self.get_full_name()} ({self.tipo_usuario})"

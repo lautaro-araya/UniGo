@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -12,9 +13,6 @@ from django.contrib.auth import update_session_auth_hash
 
 @never_cache
 def login_view(request):
-    """
-    Vista para manejar el inicio de sesión de usuarios
-    """
     if request.user.is_authenticated:
         return redirect('inicio')
 
@@ -24,10 +22,20 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            messages.success(request, f'¡Bienvenido {user.get_full_name()}!')
-            next_url = request.GET.get('next', 'inicio')
-            return redirect(next_url)
+            # Permitir acceso a superusuarios sin aprobación
+            if user.is_superuser:
+                login(request, user)
+                messages.success(request, f'¡Bienvenido administrador {user.get_full_name()}!')
+                return redirect('aprobar_usuarios')  # Redirigir directamente a la vista de aprobación
+            
+            # Para usuarios normales, verificar aprobación
+            if user.aprobado:
+                login(request, user)
+                messages.success(request, f'¡Bienvenido {user.get_full_name()}!')
+                next_url = request.GET.get('next', 'inicio')
+                return redirect(next_url)
+            else:
+                messages.error(request, 'Tu cuenta está pendiente de aprobación. Por favor, espera a que un administrador la active.')
         else:
             messages.error(request, 'Usuario o contraseña incorrectos')
     
@@ -47,6 +55,7 @@ def registro(request):
         form = RegistroForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(commit=False)
+            user.aprobado = False  # Cuenta no aprobada por defecto
             user.save()
             
             # Si es conductor, crear el vehículo
@@ -57,16 +66,43 @@ def registro(request):
                     modelo=form.cleaned_data['modelo_vehiculo'],
                     patente=form.cleaned_data['patente'],
                     año=form.cleaned_data['año_vehiculo'],
-                    asientos_disponibles=4  # Valor por defecto
+                    asientos_disponibles=form.cleaned_data['asientos_vehiculo'] or 4
                 )
             
-            login(request, user)
-            messages.success(request, '¡Registro exitoso!')
-            return redirect('inicio')
+            # No hacemos login automático
+            messages.success(request, '¡Registro exitoso! Tu cuenta está pendiente de aprobación por un administrador.')
+            return redirect('login')
     else:
         form = RegistroForm()
     
     return render(request, 'core/registro.html', {'form': form})
+
+def es_administrador(user):
+    return user.is_authenticated and (user.is_superuser or hasattr(user, 'superadministrador'))
+
+@user_passes_test(es_administrador, login_url='login')
+def aprobar_usuarios(request):
+    if request.method == 'POST':
+        usuario_id = request.POST.get('usuario_id')
+        accion = request.POST.get('accion')
+        
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)
+            if accion == 'aprobar':
+                usuario.aprobado = True
+                usuario.save()
+                messages.success(request, f'Cuenta de {usuario.get_full_name()} aprobada exitosamente.')
+            elif accion == 'rechazar':
+                usuario.delete()
+                messages.success(request, f'Cuenta de {usuario.get_full_name()} rechazada y eliminada.')
+        except Usuario.DoesNotExist:
+            messages.error(request, 'Usuario no encontrado.')
+        
+        return redirect('aprobar_usuarios')
+    
+    # Obtener usuarios pendientes ordenados por fecha de registro
+    usuarios_pendientes = Usuario.objects.filter(aprobado=False).order_by('fecha_registro')
+    return render(request, 'core/aprobar_usuarios.html', {'usuarios_pendientes': usuarios_pendientes})
 
 @login_required
 def inicio(request):

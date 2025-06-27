@@ -11,6 +11,81 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'core/styles.css' %}">
 </head>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("form");
+        const rutInput = document.getElementById("id_run_alumno");
+    
+        // Limpia el RUT dejando solo números y la K
+        function limpiarRut(rut) {
+            return rut.replace(/[^0-9kK]/g, "").toUpperCase();
+        }
+    
+        // Formatea RUT: 20123456K → 20.123.456-K
+        function formatearRut(rut) {
+            rut = limpiarRut(rut);
+            if (rut.length < 2) return rut;
+    
+            const cuerpo = rut.slice(0, -1);
+            const dv = rut.slice(-1);
+            let cuerpoFormateado = "";
+    
+            let i = 0;
+            for (let j = cuerpo.length - 1; j >= 0; j--) {
+                cuerpoFormateado = cuerpo[j] + cuerpoFormateado;
+                i++;
+                if (i % 3 === 0 && j !== 0) {
+                    cuerpoFormateado = "." + cuerpoFormateado;
+                }
+            }
+    
+            return cuerpoFormateado + "-" + dv;
+        }
+    
+        function validarDv(rut) {
+            rut = limpiarRut(rut);
+            const cuerpo = rut.slice(0, -1);
+            const dv = rut.slice(-1);
+    
+            let suma = 0;
+            let multiplo = 2;
+    
+            for (let i = cuerpo.length - 1; i >= 0; i--) {
+                suma += parseInt(cuerpo[i]) * multiplo;
+                multiplo = multiplo === 7 ? 2 : multiplo + 1;
+            }
+    
+            const resto = 11 - (suma % 11);
+            const dvEsperado = resto === 11 ? "0" : resto === 10 ? "K" : String(resto);
+    
+            return dv === dvEsperado;
+        }
+    
+        function formatoCorrecto(rut) {
+            return /^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$/.test(rut);
+        }
+    
+        rutInput.addEventListener("input", function () {
+            const raw = limpiarRut(this.value);
+            this.value = formatearRut(raw);
+        });
+    
+        form.addEventListener("submit", function (e) {
+            const rut = rutInput.value.trim();
+    
+            if (!formatoCorrecto(rut)) {
+                alert("El RUT debe tener el formato XX.XXX.XXX-Z. Ej: 20.123.456-7");
+                e.preventDefault();
+                return;
+            }
+    
+            if (!validarDv(rut)) {
+                alert("El dígito verificador del RUT no es válido.");
+                e.preventDefault();
+            }
+        });
+    });
+</script>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -36,6 +111,13 @@
                                     <h3 for="{{ form.email.id_for_label }}">Correo electrónico</h3>
                                     {{ form.email }}                                    
                                     {{ form.email.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <h3 for="{{ form.run.id_for_label }}">Run:</h3>
+                                    {{ form.run }}                                    
+                                    {{ form.run.errors }}
                                 </div>
                             </div>
                             <div class="col-md-6">
