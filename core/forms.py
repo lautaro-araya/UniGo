@@ -1,7 +1,9 @@
 from django import forms
+import re
 from django.contrib.auth.forms import UserCreationForm
 from .models import Usuario, Vehiculo, Viaje
 from django.contrib.auth.forms import PasswordChangeForm
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -51,7 +53,7 @@ class RegistroForm(UserCreationForm):
     
     class Meta:
         model = Usuario
-        fields = ['username', 'first_name', 'last_name', 'email', 'tipo_usuario', 
+        fields = ['username', 'first_name', 'last_name', 'email', 'run',  'tipo_usuario', 
                  'telefono', 'universidad', 'password1', 'password2',
                  'marca_vehiculo', 'modelo_vehiculo', 'patente', 'año_vehiculo', 'color_vehiculo', 'asientos_vehiculo']
     
@@ -68,6 +70,36 @@ class RegistroForm(UserCreationForm):
             if not cleaned_data.get('año_vehiculo'):
                 self.add_error('año_vehiculo', 'Este campo es obligatorio para conductores')
         return cleaned_data
+    
+    def clean_run(self):
+        rut = self.cleaned_data.get('run', '').strip().upper()
+
+        if not re.match(r'^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$', rut):
+            raise ValidationError("El RUT debe tener el formato XX.XXX.XXX-Z. Ej: 20.123.456-7")
+
+        rut_sin_puntos = rut.replace('.', '')
+        cuerpo, dv = rut_sin_puntos.split('-')
+
+        if not self.validar_dv(cuerpo, dv):
+            raise ValidationError("El dígito verificador del RUT no es válido.")
+
+        return rut  
+
+    def validar_dv(self, rut_num, dv_input):
+        suma = 0
+        multiplo = 2
+
+        for c in reversed(rut_num):
+            suma += int(c) * multiplo
+            multiplo = multiplo + 1 if multiplo < 7 else 2
+
+        resto = 11 - (suma % 11)
+        dv_esperado = {
+            11: "0",
+            10: "K"
+        }.get(resto, str(resto))
+
+        return dv_input.upper() == dv_esperado
     
     def clean_patente(self):
         patente = self.cleaned_data.get('patente')
