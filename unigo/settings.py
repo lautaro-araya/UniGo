@@ -137,3 +137,11 @@ if not DEBUG:
     # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
     # and renames the files with unique names for each version to support long-term caching
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+if 'RENDER' in os.environ:
+    MEDIA_ROOT = os.path.join(os.getenv('RENDER_EXTERNAL_STORAGE_PATH', '/var/data'), 'media')
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_URL = '/media/'  
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
