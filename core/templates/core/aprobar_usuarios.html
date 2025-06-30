@@ -40,12 +40,14 @@
                                     <td>{{ usuario.run }}</td>
                                     <td>{{ usuario.get_tipo_usuario_display }}</td>
                                     <td>
-                                        {% if usuario.documento %}
-                                        <a href="{{ usuario.documento.url }}" target="_blank" class="btn btn-info btn-sm">
-                                            <i class="bi bi-file-earmark-pdf"></i> Ver PDF
+                                        {% if usuario.documento_pdf %}
+                                        <a href="{% url 'ver_documento' usuario.id %}" 
+                                        target="_blank" 
+                                        class="btn btn-info btn-sm">
+                                            <i class="bi bi-file-earmark-pdf"></i> Ver Documento
                                         </a>
                                         {% else %}
-                                        <span class="text-danger">No subido</span>
+                                        <span class="text-danger">No disponible</span>
                                         {% endif %}
                                     </td>
                                     <td>

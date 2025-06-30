@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponseForbidden, JsonResponse, HttpResponse
+from django.http import HttpResponseForbidden, JsonResponse, HttpResponse, Http404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -10,6 +10,20 @@ from .forms import RegistroForm, VehiculoForm, ViajeForm, PerfilUpdateForm, Cust
 from .models import Usuario, Vehiculo, Viaje, Reserva, Calificacion, ChatViaje, MensajeChat
 from django.views.decorators.cache import never_cache
 from django.contrib.auth import update_session_auth_hash
+from django.views.decorators.http import require_GET
+
+@require_GET
+def ver_documento(request, user_id):
+    try:
+        usuario = Usuario.objects.get(id=user_id)
+        if usuario.documento_pdf:
+            response = HttpResponse(usuario.documento_pdf, content_type=usuario.documento_tipo)
+            response['Content-Disposition'] = f'inline; filename="{usuario.documento_nombre}"'
+            return response
+        raise Http404("Documento no encontrado")
+    except Usuario.DoesNotExist:
+        raise Http404("Usuario no encontrado")
+
 
 @never_cache
 def login_view(request):
@@ -52,13 +66,11 @@ def logout_view(request):
 
 def registro(request):
     if request.method == 'POST':
-        form = RegistroForm(request.POST, request.FILES)  # Nota el request.FILES
+        form = RegistroForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save(commit=False)
             user.aprobado = False
             user.save()
-            
-            # Guardar el documento (se hace automáticamente por el FileField)
             
             if user.tipo_usuario == 'conductor':
                 Vehiculo.objects.create(

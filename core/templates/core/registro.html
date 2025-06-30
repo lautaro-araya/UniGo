@@ -86,26 +86,6 @@
         });
     });
 </script>
-<script>
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const fileInput = document.getElementById('{{ form.documento.id_for_label }}');
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            // Validar tipo de archivo
-            if (!file.name.toLowerCase().endsWith('.pdf')) {
-                alert('Solo se permiten archivos PDF');
-                e.preventDefault();
-                return;
-            }
-            // Validar tamaño (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('El archivo es demasiado grande. Máximo 5MB');
-                e.preventDefault();
-                return;
-            }
-        }
-    });
-</script>
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -169,26 +149,22 @@
                             </div>
                         </div>
                         <h4 class="mb-3 mt-4">Documentación Requerida</h4>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="{{ form.documento.id_for_label }}" class="form-label">
-                                        <h3>Certificado de Alumno Regular (PDF)</h3>
-                                    </label>
-                                    <input type="file" 
-                                        class="form-control" 
-                                        id="{{ form.documento.id_for_label }}" 
-                                        name="{{ form.documento.html_name }}"
-                                        accept=".pdf" 
-                                        required>
-                                    <div class="form-text">Sube tu certificado de alumno regular en PDF para acreditar tu identidad. Máximo 5MB.</div>
-                                    {% if form.documento.errors %}
-                                        <div class="alert alert-danger mt-2">
-                                            {{ form.documento.errors }}
-                                        </div>
-                                    {% endif %}
+                        <div class="mb-3">
+                            <label for="{{ form.documento_pdf.id_for_label }}" class="form-label">
+                                <h3>Documento de Identificación (PDF)</h3>
+                            </label>
+                            <input type="file" 
+                                class="form-control" 
+                                id="{{ form.documento_upload.id_for_label }}" 
+                                name="{{ form.documento_upload.html_name }}"
+                                accept=".pdf" 
+                                required>
+                            <div class="form-text">Sube un documento PDF que acredite tu identidad (máximo 5MB)</div>
+                            {% if form.documento_pdf.errors %}
+                                <div class="alert alert-danger mt-2">
+                                    {{ form.documento_pdf.errors }}
                                 </div>
-                            </div>
+                            {% endif %}
                         </div>
                         <h4 class="mb-3 mt-4">Tipo de Usuario</h4>
                         <div class="mb-4">
