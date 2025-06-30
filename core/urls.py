@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.login_view, name='login'),
@@ -25,4 +27,7 @@ urlpatterns = [
     path('chats/', views.listar_chats, name='lista_chats'),
     path('chat/<int:reserva_id>/', views.ver_chat, name='ver_chat'),
     path('aprobar-usuarios/', views.aprobar_usuarios, name='aprobar_usuarios'),
-]
+] 
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

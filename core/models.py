@@ -3,6 +3,13 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
+import os
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+
+def user_pdf_upload_path(instance, filename):
+    # Guarda el archivo en: media/users/<user_id>/documento.pdf
+    return os.path.join('users', str(instance.id), 'documento.pdf')
 
 class Usuario(AbstractUser):
     TIPO_USUARIO_CHOICES = [
@@ -20,6 +27,13 @@ class Usuario(AbstractUser):
     )
     aprobado = models.BooleanField(default=False, verbose_name="Cuenta aprobada")
     fecha_registro = models.DateTimeField(auto_now_add=True)
+    documento = models.FileField(
+        upload_to=user_pdf_upload_path,
+        null=True,
+        blank=True,
+        verbose_name="Documento de identificación (PDF)",
+        validators=[FileExtensionValidator(['pdf'])]
+    )
     
     def __str__(self):
         return f"{self.get_full_name()} ({self.tipo_usuario})"

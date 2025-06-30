@@ -126,3 +126,11 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "core.Usuario"
+
+if 'RENDER' in os.environ:
+    MEDIA_ROOT = os.path.join(os.getenv('RENDER_EXTERNAL_STORAGE_PATH', '/var/data'), 'media')
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_URL = '/media/'  
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 

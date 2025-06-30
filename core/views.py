@@ -52,13 +52,14 @@ def logout_view(request):
 
 def registro(request):
     if request.method == 'POST':
-        form = RegistroForm(request.POST, request.FILES)
+        form = RegistroForm(request.POST, request.FILES)  # Nota el request.FILES
         if form.is_valid():
             user = form.save(commit=False)
-            user.aprobado = False  # Cuenta no aprobada por defecto
+            user.aprobado = False
             user.save()
             
-            # Si es conductor, crear el vehículo
+            # Guardar el documento (se hace automáticamente por el FileField)
+            
             if user.tipo_usuario == 'conductor':
                 Vehiculo.objects.create(
                     conductor=user,
@@ -69,8 +70,7 @@ def registro(request):
                     asientos_disponibles=form.cleaned_data['asientos_vehiculo'] or 4
                 )
             
-            # No hacemos login automático
-            messages.success(request, '¡Registro exitoso! Tu cuenta está pendiente de aprobación por un administrador.')
+            messages.success(request, '¡Registro exitoso! Tu cuenta está pendiente de aprobación.')
             return redirect('login')
     else:
         form = RegistroForm()
@@ -100,7 +100,6 @@ def aprobar_usuarios(request):
         
         return redirect('aprobar_usuarios')
     
-    # Obtener usuarios pendientes ordenados por fecha de registro
     usuarios_pendientes = Usuario.objects.filter(aprobado=False).order_by('fecha_registro')
     return render(request, 'core/aprobar_usuarios.html', {'usuarios_pendientes': usuarios_pendientes})
 
