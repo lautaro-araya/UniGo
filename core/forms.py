@@ -5,8 +5,14 @@ from .models import Usuario, Vehiculo, Viaje
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.core.validators import FileExtensionValidator
 
 User = get_user_model()
+
+def validate_file_size(value):
+    limit = 5 * 1024 * 1024  # 5MB
+    if value.size > limit:
+        raise ValidationError('El archivo es demasiado grande. Tamaño máximo: 5MB.')
 
 class RegistroForm(UserCreationForm):
     tipo_usuario = forms.ChoiceField(
@@ -50,11 +56,19 @@ class RegistroForm(UserCreationForm):
         max_value=10, 
         initial=4
     )
-    
+
+    documento = forms.FileField(
+        label="Documento de identificación",
+        required=True,
+        validators=[
+            FileExtensionValidator(allowed_extensions=['pdf']),
+            validate_file_size,  # Validador de tamaño que creamos antes
+        ]
+    )
     class Meta:
         model = Usuario
         fields = ['username', 'first_name', 'last_name', 'email', 'run',  'tipo_usuario', 
-                 'telefono', 'universidad', 'password1', 'password2',
+                 'telefono', 'universidad', 'password1', 'password2', 'documento',
                  'marca_vehiculo', 'modelo_vehiculo', 'patente', 'año_vehiculo', 'color_vehiculo', 'asientos_vehiculo']
     
     def clean(self):
