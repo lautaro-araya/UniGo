@@ -131,7 +131,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "core.Usuario"
 
-MEDIA_URL = '/media/'  
 
 if not DEBUG:
     # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
@@ -140,9 +139,6 @@ if not DEBUG:
     # and renames the files with unique names for each version to support long-term caching
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-if 'RENDER' in os.environ:
-    MEDIA_ROOT = os.path.join(os.getenv('RENDER_EXTERNAL_STORAGE_PATH', '/var/data'), 'media')
-else:
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 
