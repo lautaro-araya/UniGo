@@ -9,7 +9,7 @@ from django.core.validators import FileExtensionValidator
 
 User = get_user_model()
 
-def validate_file_size(value):
+def validate_pdf_size(value):
     limit = 5 * 1024 * 1024  # 5MB
     if value.size > limit:
         raise ValidationError('El archivo es demasiado grande. Tamaño máximo: 5MB.')
@@ -57,18 +57,17 @@ class RegistroForm(UserCreationForm):
         initial=4
     )
 
-    documento = forms.FileField(
-        label="Documento de identificación",
+    documento_upload = forms.FileField(
+        label="Documento de identificación (PDF)",
         required=True,
-        validators=[
-            FileExtensionValidator(allowed_extensions=['pdf']),
-            validate_file_size,  # Validador de tamaño que creamos antes
-        ]
+        validators=[validate_pdf_size],
+        help_text="Sube un documento PDF que acredite tu identidad (máximo 5MB)"
     )
+
     class Meta:
         model = Usuario
         fields = ['username', 'first_name', 'last_name', 'email', 'run',  'tipo_usuario', 
-                 'telefono', 'universidad', 'password1', 'password2', 'documento',
+                 'telefono', 'universidad', 'password1', 'password2',
                  'marca_vehiculo', 'modelo_vehiculo', 'patente', 'año_vehiculo', 'color_vehiculo', 'asientos_vehiculo']
     
     def clean(self):
@@ -120,6 +119,22 @@ class RegistroForm(UserCreationForm):
         if patente and Vehiculo.objects.filter(patente=patente).exists():
             raise forms.ValidationError("Esta patente ya está registrada")
         return patente
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        documento = self.cleaned_data.get('documento_upload')
+        
+        if documento:
+            user.documento_pdf = documento.read()
+            user.documento_nombre = documento.name
+            user.documento_tipo = documento.content_type
+            user.documento_size = documento.size
+        
+        if commit:
+            user.save()
+            self.save_m2m()
+        
+        return user
 
 class VehiculoForm(forms.ModelForm):
     class Meta:

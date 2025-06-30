@@ -27,6 +27,7 @@ urlpatterns = [
     path('chats/', views.listar_chats, name='lista_chats'),
     path('chat/<int:reserva_id>/', views.ver_chat, name='ver_chat'),
     path('aprobar-usuarios/', views.aprobar_usuarios, name='aprobar_usuarios'),
+    path('ver-documento/<int:user_id>/', views.ver_documento, name='ver_documento'),
 ] 
 
 if settings.DEBUG:

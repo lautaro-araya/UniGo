@@ -114,11 +114,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-if 'RENDER' in os.environ:
-    MEDIA_ROOT = os.path.join(os.getenv('RENDER_EXTERNAL_STORAGE_PATH', '/var/data'), 'media')
-else:
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 MEDIA_URL = '/media/'  
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media') 
 

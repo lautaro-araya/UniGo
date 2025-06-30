@@ -27,13 +27,10 @@ class Usuario(AbstractUser):
     )
     aprobado = models.BooleanField(default=False, verbose_name="Cuenta aprobada")
     fecha_registro = models.DateTimeField(auto_now_add=True)
-    documento = models.FileField(
-        upload_to=user_pdf_upload_path,
-        null=True,
-        blank=True,
-        verbose_name="Documento de identificación (PDF)",
-        validators=[FileExtensionValidator(['pdf'])]
-    )
+    documento_pdf = models.BinaryField(null=True, blank=True, editable=True)
+    documento_nombre = models.CharField(max_length=255, null=True, blank=True)
+    documento_tipo = models.CharField(max_length=100, null=True, blank=True)
+    documento_size = models.PositiveIntegerField(null=True, blank=True)
     
     def __str__(self):
         return f"{self.get_full_name()} ({self.tipo_usuario})"
