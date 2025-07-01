@@ -139,6 +139,12 @@ if not DEBUG:
     # and renames the files with unique names for each version to support long-term caching
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'unimovuczc@gmail.com'
+EMAIL_HOST_PASSWORD = 'tpky lrjl sqod ppxq'
+DEFAULT_FROM_EMAIL = 'unimovuczc@gmail.com'
 
 
