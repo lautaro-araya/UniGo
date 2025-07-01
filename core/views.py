@@ -11,6 +11,8 @@ from .models import Usuario, Vehiculo, Viaje, Reserva, Calificacion, ChatViaje, 
 from django.views.decorators.cache import never_cache
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_GET
+from .emails import enviar_notificacion_admin, enviar_notificacion_aprobacion
+
 
 @require_GET
 def ver_documento(request, user_id):
@@ -72,6 +74,8 @@ def registro(request):
             user.aprobado = False
             user.save()
             
+            enviar_notificacion_admin(user)
+
             if user.tipo_usuario == 'conductor':
                 Vehiculo.objects.create(
                     conductor=user,
@@ -103,6 +107,7 @@ def aprobar_usuarios(request):
             if accion == 'aprobar':
                 usuario.aprobado = True
                 usuario.save()
+                enviar_notificacion_aprobacion(usuario)
                 messages.success(request, f'Cuenta de {usuario.get_full_name()} aprobada exitosamente.')
             elif accion == 'rechazar':
                 usuario.delete()
