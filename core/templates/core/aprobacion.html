@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cuenta Aprobada</title>
+</head>
+<body>
+    <h2>¡Buenas noticias, {{ usuario.first_name }}!</h2>
+    <p>Tu cuenta en nuestra plataforma ha sido aprobada.</p>
+    <p>Ahora puedes iniciar sesión y disfrutar de todos nuestros servicios.</p>
+    
+    <p>Detalles de tu cuenta:</p>
+    <ul>
+        <li>Nombre de usuario: {{ usuario.username }}</li>
+        <li>Email: {{ usuario.email }}</li>
+        <li>Tipo de cuenta: {{ usuario.get_tipo_usuario_display }}</li>
+    </ul>
+    
+    <p>Gracias por unirte a nuestra comunidad.</p>
+    <p>El equipo de UniMov</p>
+</body>
+</html>
